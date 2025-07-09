@@ -1,1 +1,81 @@
+package com.mycompany.mainpanel;
+import javax.swing.*;
+import java.awt.event.*;
+
+public class Mainpanel {
+
+    public static void main(String[] args) {
+    
+        JFrame frame = new JFrame("Main Panel");
+        frame.setSize(300, 200);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(null);
+
+       
+        JButton adminButton = new JButton("Admin Panel");
+        adminButton.setBounds(80, 40, 140, 30);
+        frame.add(adminButton);
+
+        JButton customerButton = new JButton("Customer Panel");
+        customerButton.setBounds(80, 90, 140, 30);
+        frame.add(customerButton);
+
+   
+        adminButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); 
+                new Adminpanel(); 
+            }
+        });
+
+        customerButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); 
+                new Customerpanel(); 
+            }
+        });
+
+       
+        frame.setLocationRelativeTo(null); 
+        frame.setVisible(true);
+    }
+}
+package com.mycompany.mainpanel;
+import javax.swing.*;
+public class Adminpanel {
+    
+    public Adminpanel() {
+       
+        JFrame frame = new JFrame("Admin Panel");
+        frame.setSize(300, 150);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(null);
+
+        JLabel label = new JLabel("Welcome, Admin!");
+        label.setBounds(90, 40, 150, 30);
+        frame.add(label);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+
+package com.mycompany.mainpanel;
+import javax.swing.*;
+public class Customerpanel {
+     public Customerpanel() {
+        
+        JFrame frame = new JFrame("Customer Panel");
+        frame.setSize(300, 150);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(null);
+
+        JLabel label = new JLabel("Welcome, Customer!");
+        label.setBounds(80, 40, 150, 30);
+        frame.add(label);
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
 
