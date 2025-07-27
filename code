@@ -5,13 +5,21 @@ import java.awt.event.*;
 public class Mainpanel {
 
     public static void main(String[] args) {
-    
+
+       
+        JOptionPane.showMessageDialog(
+                null,
+                "Welcome to our ATM simulation system",
+                "Welcome",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+      
         JFrame frame = new JFrame("Main Panel");
         frame.setSize(300, 200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
 
-       
         JButton adminButton = new JButton("Admin Panel");
         adminButton.setBounds(80, 40, 140, 30);
         frame.add(adminButton);
@@ -20,46 +28,89 @@ public class Mainpanel {
         customerButton.setBounds(80, 90, 140, 30);
         frame.add(customerButton);
 
-   
         adminButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                frame.dispose(); 
-                new Adminpanel(); 
+                frame.dispose();
+                new Adminpanel();
             }
         });
 
         customerButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                frame.dispose(); 
-                new Customerpanel(); 
+                frame.dispose();
+                new Customerpanel();
             }
         });
 
-       
         frame.setLocationRelativeTo(null); 
         frame.setVisible(true);
     }
-}
+} 
 package com.mycompany.mainpanel;
+
 import javax.swing.*;
+
 public class Adminpanel {
-    
+
     public Adminpanel() {
-       
+
+        int attempts = 0;
+        boolean success = false;
+
+        while (attempts < 3) {
+            String password = JOptionPane.showInputDialog(null,
+                    "Enter Admin Password:", "Login",
+                    JOptionPane.PLAIN_MESSAGE);
+
+            if (password == null) {
+                return;
+            }
+
+            if (password.equals("12345")) {
+                JOptionPane.showMessageDialog(null,
+                        "Correct password!!!", "Access Granted",
+                        JOptionPane.INFORMATION_MESSAGE);
+                success = true;
+                break;
+            } else {
+                attempts++;
+                if (attempts < 3) {
+                    JOptionPane.showMessageDialog(null,
+                            "Incorrect! Try again", "Login Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+
+        if (!success) {
+            JOptionPane.showMessageDialog(null,
+                    "Intruder Alert!!!", "Security Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         JFrame frame = new JFrame("Admin Panel");
-        frame.setSize(300, 150);
+        frame.setSize(300, 200);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
 
         JLabel label = new JLabel("Welcome, Admin!");
-        label.setBounds(90, 40, 150, 30);
+        label.setBounds(90, 20, 150, 30);
         frame.add(label);
+
+        JButton createAccountButton = new JButton("Create Account");
+        createAccountButton.setBounds(80, 70, 140, 30);
+        frame.add(createAccountButton);
+
+        createAccountButton.addActionListener(e -> {
+            frame.dispose();
+            new CreateAccountForm();
+        });
 
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 }
-
 package com.mycompany.mainpanel;
 import javax.swing.*;
 public class Customerpanel {
@@ -76,6 +127,104 @@ public class Customerpanel {
 
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.event.*;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeParseException;
+import java.util.Random;
+ 
+public class CreateAccountForm {
+
+    public CreateAccountForm() {
+        JFrame frame = new JFrame("Create New Account");
+        frame.setSize(400, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(null);
+
+        JLabel nameLabel = new JLabel("Name:");
+        nameLabel.setBounds(50, 30, 100, 30);
+        frame.add(nameLabel);
+
+        JTextField nameField = new JTextField();
+        nameField.setBounds(150, 30, 180, 30);
+        frame.add(nameField);
+
+        JLabel dobLabel = new JLabel("Date of Birth (yyyy-mm-dd):");
+        dobLabel.setBounds(50, 80, 200, 30);
+        frame.add(dobLabel);
+
+        JTextField dobField = new JTextField();
+        dobField.setBounds(250, 80, 80, 30);
+        frame.add(dobField);
+
+        JLabel nidLabel = new JLabel("NID Number:");
+        nidLabel.setBounds(50, 130, 100, 30);
+        frame.add(nidLabel);
+
+        JTextField nidField = new JTextField();
+        nidField.setBounds(150, 130, 180, 30);
+        frame.add(nidField);
+
+        JLabel accLabel = new JLabel("Account Number:");
+        accLabel.setBounds(50, 180, 130, 30);
+        frame.add(accLabel);
+
+        JTextField accField = new JTextField();
+        accField.setBounds(180, 180, 150, 30);
+        accField.setEditable(false);
+        frame.add(accField);
+
+        JButton generateBtn = new JButton("Generate Account");
+        generateBtn.setBounds(120, 240, 150, 40);
+        frame.add(generateBtn);
+
+        generateBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText().trim();
+                String dobText = dobField.getText().trim();
+                String nid = nidField.getText().trim();
+
+                if (name.isEmpty() || dobText.isEmpty() || nid.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                try {
+                    LocalDate dob = LocalDate.parse(dobText);
+                    LocalDate today = LocalDate.now();
+                    int age = Period.between(dob, today).getYears();
+
+                    if (age < 18) {
+                        JOptionPane.showMessageDialog(frame, "You are underage, can't open an account.", "Underage", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+
+                    String accountNumber = generateAccountNumber();
+                    accField.setText(accountNumber);
+
+                    JOptionPane.showMessageDialog(frame,
+                            "Account created successfully!\nAccount Number: " + accountNumber,
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                } catch (DateTimeParseException ex) {
+                    JOptionPane.showMessageDialog(frame, "Invalid date format. Use yyyy-mm-dd.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private String generateAccountNumber() {
+        Random random = new Random();
+        int accNum = 10000 + random.nextInt(90000); 
+        return String.valueOf(accNum);
     }
 }
 
