@@ -2,7 +2,7 @@
 Hello!!! This is my first java project along with my teammates Its a project which simulates the ATM machine. we used swing framework for the project. We are using various oop concept to structure and manage account and transaction data. we also took inspiration and idea from various GitHub project. The features we have in mind is First of all it will have two panel.
 👨‍💼 Admin Panel: 
 1.Secure Login using a special 6-digit admin PIN.
-2.Create New Customer Account - Generates a unique 5-digit account number.Requires name, date of birth, and NID number.Rejects users under 18 years of age.
+2.Create New Customer Account - Generates a unique 5-digit account number.Requires name, date of birth, and NID number(7 digit) .Rejects users under 18 years of age. One customer cant create more then one account.
 3.Update Customer Details – Modify existing account information. 
 4.Delete Account – Remove customer accounts permanently.
 5.Search Account – Search by account number to view customer name and current balance. 
