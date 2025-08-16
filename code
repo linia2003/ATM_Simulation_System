@@ -1,132 +1,274 @@
 package com.mycompany.mainpanel;
-import javax.swing.*;
-import java.awt.event.*;
-
-public class Mainpanel {
-
-    public static void main(String[] args) {
-
-       
-        JOptionPane.showMessageDialog(
-                null,
-                "Welcome to our ATM simulation system",
-                "Welcome",
-                JOptionPane.INFORMATION_MESSAGE
-        );
-
-      
-        JFrame frame = new JFrame("Main Panel");
-        frame.setSize(300, 200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(null);
-
-        JButton adminButton = new JButton("Admin Panel");
-        adminButton.setBounds(80, 40, 140, 30);
-        frame.add(adminButton);
-
-        JButton customerButton = new JButton("Customer Panel");
-        customerButton.setBounds(80, 90, 140, 30);
-        frame.add(customerButton);
-
-        adminButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                new Adminpanel();
-            }
-        });
-
-        customerButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                new Customerpanel();
-            }
-        });
-
-        frame.setLocationRelativeTo(null); 
-        frame.setVisible(true);
-    }
-} 
-package com.mycompany.mainpanel;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.util.List;
 
 public class Adminpanel {
+    public static void openAdminPanel() {
+        new Adminpanel(false);
+    }
 
     public Adminpanel() {
+        this(true);
+    }
 
-        int attempts = 0;
-        boolean success = false;
+    public Adminpanel(boolean requireLogin) {
+        if (requireLogin) {
+            int attempts = 0;
+            boolean success = false;
 
-        while (attempts < 3) {
-            String password = JOptionPane.showInputDialog(null,
-                    "Enter Admin Password:", "Login",
-                    JOptionPane.PLAIN_MESSAGE);
+            while (attempts < 3) {
+                String password = showAdminPasswordDialog();
 
-            if (password == null) {
-                return;
-            }
+                if (password == null) return;
 
-            if (password.equals("12345")) {
-                JOptionPane.showMessageDialog(null,
-                        "Correct password!!!", "Access Granted",
-                        JOptionPane.INFORMATION_MESSAGE);
-                success = true;
-                break;
-            } else {
-                attempts++;
-                if (attempts < 3) {
+                if (password.equals("12345")) {
                     JOptionPane.showMessageDialog(null,
-                            "Incorrect! Try again", "Login Failed",
-                            JOptionPane.ERROR_MESSAGE);
+                            createColoredLabel("Correct password!!!", Color.BLUE), "Access Granted",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    success = true;
+                    break;
+                } else {
+                    attempts++;
+                    if (attempts < 3) {
+                        JOptionPane.showMessageDialog(null,
+                                createColoredLabel("Incorrect! Try again", Color.RED), "Login Failed",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
-        }
 
-        if (!success) {
-            JOptionPane.showMessageDialog(null,
-                    "Intruder Alert!!!", "Security Warning",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
+            if (!success) {
+                JOptionPane.showMessageDialog(null,
+                        createColoredLabel("Intruder Alert!!!", Color.RED), "Security Warning",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         }
 
         JFrame frame = new JFrame("Admin Panel");
-        frame.setSize(300, 200);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(300, 500);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(null);
+        frame.getContentPane().setBackground(new Color(200, 162, 200));
 
         JLabel label = new JLabel("Welcome, Admin!");
-        label.setBounds(90, 20, 150, 30);
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        int labelWidth = 200;
+        int labelHeight = 30;
+        int frameWidth = 300;
+        int labelX = (frameWidth - labelWidth) / 2;
+        label.setBounds(labelX, 20, labelWidth, labelHeight);
         frame.add(label);
 
-        JButton createAccountButton = new JButton("Create Account");
-        createAccountButton.setBounds(80, 70, 140, 30);
-        frame.add(createAccountButton);
+        int buttonX = 60;
+        int buttonWidth = 180;
+        int buttonHeight = 35;
+        int spacing = 15;
+        int startY = 70;
 
+        JButton createAccountButton = new JButton("Create Account");
+        createAccountButton.setBounds(buttonX, startY, buttonWidth, buttonHeight);
+        createAccountButton.setBackground(Color.WHITE);
+        frame.add(createAccountButton);
         createAccountButton.addActionListener(e -> {
             frame.dispose();
             new CreateAccountForm();
         });
 
+        JButton updateCustomerButton = new JButton("Update Customer");
+        updateCustomerButton.setBounds(buttonX, startY + (buttonHeight + spacing), buttonWidth, buttonHeight);
+        updateCustomerButton.setBackground(Color.WHITE);
+        frame.add(updateCustomerButton);
+        updateCustomerButton.addActionListener(e -> {
+            frame.dispose();
+            new UpdateCustomerForm();
+        });
+
+        JButton searchAccountButton = new JButton("Search Account");
+        searchAccountButton.setBounds(buttonX, startY + 2 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+        searchAccountButton.setBackground(Color.WHITE);
+        frame.add(searchAccountButton);
+        searchAccountButton.addActionListener(e -> {
+            new SearchAccount(frame).setVisible(true);
+        });
+
+        JButton transactionHistoryButton = new JButton("Transaction History");
+        transactionHistoryButton.setBounds(buttonX, startY + 3 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+        transactionHistoryButton.setBackground(Color.WHITE);
+        frame.add(transactionHistoryButton);
+        transactionHistoryButton.addActionListener(e -> {
+            showTransactionTable(frame);
+        });
+
+        JButton deleteAccountButton = new JButton("Delete Account");
+        deleteAccountButton.setBounds(buttonX, startY + 4 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+        deleteAccountButton.setBackground(Color.WHITE);
+        frame.add(deleteAccountButton);
+        deleteAccountButton.addActionListener(e -> {
+            frame.dispose();
+            new DeleteAccountForm();
+        });
+
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.setBounds(buttonX, startY + 5 * (buttonHeight + spacing), buttonWidth, buttonHeight);
+        logoutButton.setBackground(Color.WHITE);
+        frame.add(logoutButton);
+        logoutButton.addActionListener(e -> {
+            frame.dispose();
+            Mainpanel.openMainPanel();
+        });
+
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
-}
-package com.mycompany.mainpanel;
-import javax.swing.*;
-public class Customerpanel {
-     public Customerpanel() {
+
+    private JLabel createColoredLabel(String text, Color color) {
+        JLabel label = new JLabel(text);
+        label.setForeground(color);
+        label.setFont(new Font("SansSerif", Font.BOLD, 14));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        return label;
+    }
+
+    private String showAdminPasswordDialog() {
+        Color mattePurple = new Color(128, 90, 150); 
+        Color mattePurpleHover = new Color(148, 110, 170); 
+        Color oldButtonBg = UIManager.getColor("Button.background");
+        Color oldButtonFg = UIManager.getColor("Button.foreground");
+        Font oldButtonFont = UIManager.getFont("Button.font");
+
+        try {
+            UIManager.put("Button.background", mattePurple);
+            UIManager.put("Button.foreground", Color.WHITE);
+            UIManager.put("Button.font", new Font("SansSerif", Font.BOLD, 12));
+
+            UIManager.put("Panel.background", mattePurple);
+            UIManager.put("OptionPane.background", mattePurple);
+            UIManager.put("OptionPane.messageForeground", Color.WHITE);
+
+            JPanel panel = new JPanel();
+            panel.setBackground(mattePurple);
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+            JLabel label = new JLabel("Enter Admin Password:");
+            label.setFont(new Font("SansSerif", Font.BOLD, 14));
+            label.setForeground(Color.WHITE);
+            label.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+
+            JPasswordField passwordField = new JPasswordField(15);
+            passwordField.setMaximumSize(passwordField.getPreferredSize());
+            passwordField.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+            passwordField.setBackground(Color.WHITE);
+            passwordField.setForeground(Color.DARK_GRAY);
+
+            panel.add(label);
+            panel.add(Box.createVerticalStrut(10));
+            panel.add(passwordField);
+
+            JOptionPane optionPane = new JOptionPane(panel, JOptionPane.PLAIN_MESSAGE,
+                    JOptionPane.OK_CANCEL_OPTION);
+
+            JDialog dialog = optionPane.createDialog(null, "Login");
+
+            dialog.addComponentListener(new java.awt.event.ComponentAdapter() {
+                @Override
+                public void componentShown(java.awt.event.ComponentEvent e) {
+                    for (Component c : optionPane.getComponents()) {
+                        if (c instanceof JPanel) {
+                            for (Component b : ((JPanel) c).getComponents()) {
+                                if (b instanceof JButton) {
+                                    JButton btn = (JButton) b;
+                                    btn.setBackground(mattePurple);
+                                    btn.setForeground(Color.WHITE);
+                                    btn.setFocusPainted(false);
+                                    btn.addMouseListener(new java.awt.event.MouseAdapter() {
+                                        @Override
+                                        public void mouseEntered(java.awt.event.MouseEvent evt) {
+                                            btn.setBackground(mattePurpleHover);
+                                        }
+                                        @Override
+                                        public void mouseExited(java.awt.event.MouseEvent evt) {
+                                            btn.setBackground(mattePurple);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            dialog.setVisible(true);
+
+            Object value = optionPane.getValue();
+            if (value != null && value.equals(JOptionPane.OK_OPTION)) {
+                return new String(passwordField.getPassword());
+            }
+            return null;
+
+        } finally {
+            UIManager.put("Button.background", oldButtonBg);
+            UIManager.put("Button.foreground", oldButtonFg);
+            UIManager.put("Button.font", oldButtonFont);
+            UIManager.put("Panel.background", null);
+            UIManager.put("OptionPane.background", null);
+            UIManager.put("OptionPane.messageForeground", null);
+        }
+    }
+
+    private void showTransactionTable(JFrame parentFrame) {
+        String[] columnNames = {"Date/Time", "Account Number", "Type", "Amount"};
+        List<TransactionStorage.Transaction> txList = TransactionStorage.getTransactions();
+
+        Object[][] data = new Object[txList.size()][4];
+        for (int i = 0; i < txList.size(); i++) {
+            TransactionStorage.Transaction tx = txList.get(i);
+            data[i][0] = tx.dateTime;
+            data[i][1] = tx.accountNumber;
+            data[i][2] = tx.type;
+            data[i][3] = tx.amount;
+        }
+
+        DefaultTableModel model = new DefaultTableModel(data, columnNames);
+        JTable table = new JTable(model);
         
-        JFrame frame = new JFrame("Customer Panel");
-        frame.setSize(300, 150);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(null);
+        
+        table.setBackground(new Color(224, 176, 255));
+        table.setFillsViewportHeight(true);
+        
+       
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(new Color(180, 120, 200));
+        header.setForeground(Color.WHITE);
 
-        JLabel label = new JLabel("Welcome, Customer!");
-        label.setBounds(80, 40, 150, 30);
-        frame.add(label);
+        JScrollPane scrollPane = new JScrollPane(table);
 
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+        JFrame tableFrame = new JFrame("Transaction History");
+        tableFrame.setSize(600, 400);
+        tableFrame.setLayout(null);
+
+       
+        tableFrame.getContentPane().setBackground(new Color(100, 65, 115));
+
+        scrollPane.setBounds(20, 20, 550, 280);
+        tableFrame.add(scrollPane);
+
+        JButton backButton = new JButton("Back");
+        backButton.setBounds(250, 320, 100, 30);
+        backButton.setBackground(Color.WHITE);
+        tableFrame.add(backButton);
+        backButton.addActionListener(e -> {
+            tableFrame.dispose();
+            new Adminpanel(false);
+        });
+
+        tableFrame.setLocationRelativeTo(null);
+        parentFrame.dispose();
+        tableFrame.setVisible(true);
     }
 }
 package com.mycompany.mainpanel;
@@ -137,51 +279,81 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.Random;
- 
-public class CreateAccountForm {
+import java.awt.Color;
 
+public class CreateAccountForm {
     public CreateAccountForm() {
+        Color kalamata = new Color(70, 40, 60); 
+
         JFrame frame = new JFrame("Create New Account");
-        frame.setSize(400, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 550);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(null);
+        frame.getContentPane().setBackground(kalamata);
 
         JLabel nameLabel = new JLabel("Name:");
-        nameLabel.setBounds(50, 30, 100, 30);
+        nameLabel.setBounds(50, 30, 150, 30);
+        nameLabel.setForeground(Color.WHITE);
         frame.add(nameLabel);
 
         JTextField nameField = new JTextField();
-        nameField.setBounds(150, 30, 180, 30);
+        nameField.setBounds(220, 30, 200, 30);
         frame.add(nameField);
 
         JLabel dobLabel = new JLabel("Date of Birth (yyyy-mm-dd):");
         dobLabel.setBounds(50, 80, 200, 30);
+        dobLabel.setForeground(Color.WHITE);
         frame.add(dobLabel);
 
         JTextField dobField = new JTextField();
-        dobField.setBounds(250, 80, 80, 30);
+        dobField.setBounds(270, 80, 150, 30);
         frame.add(dobField);
 
         JLabel nidLabel = new JLabel("NID Number:");
-        nidLabel.setBounds(50, 130, 100, 30);
+        nidLabel.setBounds(50, 130, 150, 30);
+        nidLabel.setForeground(Color.WHITE);
         frame.add(nidLabel);
 
         JTextField nidField = new JTextField();
-        nidField.setBounds(150, 130, 180, 30);
+        nidField.setBounds(220, 130, 200, 30);
         frame.add(nidField);
 
         JLabel accLabel = new JLabel("Account Number:");
-        accLabel.setBounds(50, 180, 130, 30);
+        accLabel.setBounds(50, 180, 150, 30);
+        accLabel.setForeground(Color.WHITE);
         frame.add(accLabel);
 
         JTextField accField = new JTextField();
-        accField.setBounds(180, 180, 150, 30);
+        accField.setBounds(220, 180, 200, 30);
         accField.setEditable(false);
         frame.add(accField);
 
+        JLabel pinLabel = new JLabel("PIN:");
+        pinLabel.setBounds(50, 230, 150, 30);
+        pinLabel.setForeground(Color.WHITE);
+        frame.add(pinLabel);
+
+        JTextField pinField = new JTextField();
+        pinField.setBounds(220, 230, 200, 30);
+        pinField.setEditable(false);
+        frame.add(pinField);
+
         JButton generateBtn = new JButton("Generate Account");
-        generateBtn.setBounds(120, 240, 150, 40);
+        generateBtn.setBounds(150, 300, 200, 40);
+        generateBtn.setBackground(Color.WHITE);
+        generateBtn.setForeground(Color.BLACK);
         frame.add(generateBtn);
+
+        JButton backButton = new JButton("Back");
+        backButton.setBounds(150, 360, 200, 30);
+        backButton.setBackground(Color.WHITE);
+        backButton.setForeground(Color.BLACK);
+        frame.add(backButton);
+
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            Adminpanel.openAdminPanel();
+        });
 
         generateBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -194,25 +366,45 @@ public class CreateAccountForm {
                     return;
                 }
 
+                if (!nid.matches("\\d{7}")) {
+                    JOptionPane.showMessageDialog(frame, "NID must be exactly 7 digits.", "Invalid NID",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (DataStore.nidExists(nid)) {
+                    JOptionPane.showMessageDialog(frame, "Account with this NID already exists!", "Duplicate Account",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
                 try {
                     LocalDate dob = LocalDate.parse(dobText);
                     LocalDate today = LocalDate.now();
                     int age = Period.between(dob, today).getYears();
 
                     if (age < 18) {
-                        JOptionPane.showMessageDialog(frame, "You are underage, can't open an account.", "Underage", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(frame, "You are underage, can't open an account.", "Underage",
+                                JOptionPane.WARNING_MESSAGE);
                         return;
                     }
 
                     String accountNumber = generateAccountNumber();
+                    String pin = generatePin();
                     accField.setText(accountNumber);
+                    pinField.setText(pin);
+
+                    UserData user = new UserData(name, nid, dobText, accountNumber, pin);
+                    DataStore.addUser(user);
 
                     JOptionPane.showMessageDialog(frame,
-                            "Account created successfully!\nAccount Number: " + accountNumber,
+                            "Account created successfully!\nAccount Number: " + accountNumber +
+                                    "\nPIN: " + pin,
                             "Success", JOptionPane.INFORMATION_MESSAGE);
 
                 } catch (DateTimeParseException ex) {
-                    JOptionPane.showMessageDialog(frame, "Invalid date format. Use yyyy-mm-dd.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "Invalid date format. Use yyyy-mm-dd.", "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -223,8 +415,1227 @@ public class CreateAccountForm {
 
     private String generateAccountNumber() {
         Random random = new Random();
-        int accNum = 10000 + random.nextInt(90000); 
+        int accNum = 10000 + random.nextInt(90000);
         return String.valueOf(accNum);
     }
+
+    private String generatePin() {
+        Random random = new Random();
+        int pin = 1000 + random.nextInt(9000);
+        return String.valueOf(pin);
+    }
 }
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class CustomerLogin {
+    public CustomerLogin() {
+        JFrame frame = new JFrame("Customer Login");
+        frame.setSize(300, 250);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setLayout(null);
+
+        
+        Color darkPurple = new Color(70, 40, 60);
+        frame.getContentPane().setBackground(darkPurple);
+
+        JLabel accLabel = new JLabel("Account Number:");
+        accLabel.setBounds(30, 30, 120, 30);
+        accLabel.setForeground(Color.WHITE);
+        accLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        frame.add(accLabel);
+
+        JTextField accField = new JTextField();
+        accField.setBounds(150, 30, 100, 30);
+        accField.setBackground(Color.WHITE);      
+        accField.setForeground(Color.BLACK);      
+        accField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        frame.add(accField);
+
+        JLabel pinLabel = new JLabel("PIN:");
+        pinLabel.setBounds(30, 80, 120, 30);
+        pinLabel.setForeground(Color.WHITE);
+        pinLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        frame.add(pinLabel);
+
+        JPasswordField pinField = new JPasswordField();
+        pinField.setBounds(150, 80, 100, 30);
+        pinField.setBackground(Color.WHITE);     
+        pinField.setForeground(Color.BLACK);     
+        pinField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        frame.add(pinField);
+
+        JButton loginBtn = new JButton("Login");
+        loginBtn.setBounds(90, 140, 100, 30);
+        loginBtn.setBackground(darkPurple);      
+        loginBtn.setForeground(Color.WHITE);    
+        loginBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        frame.add(loginBtn);
+
+        loginBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String acc = accField.getText().trim();
+                String pin = new String(pinField.getPassword()).trim();
+                UserData user = DataStore.findUser(acc, pin);
+                if (user != null) {
+                    frame.dispose();
+                    new Customerpanel(user);
+                } else {
+                    JLabel errorLabel = new JLabel("Invalid credentials!");
+                    errorLabel.setForeground(Color.RED);
+                    errorLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+                    JOptionPane.showMessageDialog(frame, errorLabel, "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class Customerpanel {
+    public Customerpanel(UserData user) {
+        JFrame frame = new JFrame("Customer Panel");
+        frame.setSize(400, 330);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(null);
+
+        frame.getContentPane().setBackground(new Color(200, 162, 200));
+
+        JLabel label = new JLabel("Welcome, " + user.getName() + "!");
+        label.setBounds(120, 20, 200, 30);
+        label.setFont(new Font("SansSerif", Font.BOLD, 16));
+        frame.add(label);
+
+        JButton depositBtn = createStyledButton("Deposit", 120, 60, 150, 30);
+        JButton withdrawBtn = createStyledButton("Withdraw", 120, 100, 150, 30);
+        JButton balanceBtn = createStyledButton("Check Balance", 120, 140, 150, 30);
+        JButton transferBtn = createStyledButton("Transfer Money", 120, 180, 150, 30);
+        JButton miniStatementBtn = createStyledButton("Mini Statement", 120, 220, 150, 30);
+        JButton logoutBtn = createStyledButton("Logout", 120, 260, 150, 30);
+
+        frame.add(depositBtn);
+        frame.add(withdrawBtn);
+        frame.add(balanceBtn);
+        frame.add(transferBtn);
+        frame.add(miniStatementBtn);
+        frame.add(logoutBtn);
+
+        depositBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Deposit depositDialog = new Deposit(frame, user.getAccountNumber(),
+                        DataStore.getUsers());
+                depositDialog.setVisible(true);
+            }
+        });
+
+        withdrawBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Withdrawal withdrawalDialog = new Withdrawal(frame, user.getAccountNumber(),
+                        DataStore.getUsers());
+                withdrawalDialog.setVisible(true);
+            }
+        });
+
+        transferBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TMoney transferDialog = new TMoney(frame, user.getAccountNumber(),
+                        DataStore.getUsers());
+                transferDialog.setVisible(true);
+            }
+        });
+
+        balanceBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                double balance = user.getBalance();
+                JOptionPane.showMessageDialog(frame, "Current Balance: " + balance + " Taka");
+            }
+        });
+
+        miniStatementBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new MiniStatement(frame, user.getAccountNumber());
+            }
+        });
+
+        logoutBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                Mainpanel.openMainPanel();
+            }
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private JButton createStyledButton(String text, int x, int y, int width, int height) {
+        JButton btn = new JButton(text);
+        btn.setBounds(x, y, width, height);
+        btn.setBackground(Color.WHITE);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        return btn;
+    }
+
+    public static void showInvalidCredentialDialog(Component parent) {
+        JLabel errorLabel = new JLabel("Invalid credentials!");
+        errorLabel.setForeground(Color.RED);
+        errorLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        JOptionPane.showMessageDialog(parent, errorLabel, "Login Failed", JOptionPane.ERROR_MESSAGE);
+    }
+}
+package com.mycompany.mainpanel;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DataStore {
+    private static final String FILE_NAME = "users.dat";
+
+    
+    public static List<UserData> userList = loadUsers();
+
+    public static void addUser(UserData user) {
+        userList.add(user);
+        saveUsers(); 
+    }
+
+    public static List<UserData> getUsers() {
+        return userList;
+    }
+
+    public static UserData findUser(String accountNumber, String pin) {
+        for (UserData user : userList) {
+            if (user.getAccountNumber().equals(accountNumber) && user.getPin().equals(pin)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    public static boolean nidExists(String nid) {
+        for (UserData user : userList) {
+            if (user.getNid().equals(nid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+   
+    public static void saveUsers() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            out.writeObject(userList);
+        } catch (IOException e) {
+            System.err.println("Error saving users: " + e.getMessage());
+        }
+    }
+
+  
+    public static List<UserData> loadUsers() {
+        File file = new File(FILE_NAME);
+        if (!file.exists()) {
+            return new ArrayList<>();
+        }
+
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            return (List<UserData>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading users: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.event.*;
+import java.awt.*;
+
+public class DeleteAccountForm {
+    private JFrame frame;
+    private JTextField accountNumberField;
+    private JPasswordField specialPasswordField;
+
+    public DeleteAccountForm() {
+        frame = new JFrame("Delete Account");
+        frame.setSize(350, 220);
+        frame.setLayout(null);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        Color kalamata = new Color(76, 45, 61);
+        frame.getContentPane().setBackground(kalamata);
+
+        JLabel label = new JLabel("Delete Account");
+        label.setBounds(110, 10, 150, 30);
+        label.setForeground(Color.WHITE);
+        frame.add(label);
+
+        JLabel accLabel = new JLabel("Account Number:");
+        accLabel.setBounds(30, 50, 120, 25);
+        accLabel.setForeground(Color.WHITE);
+        frame.add(accLabel);
+
+        accountNumberField = new JTextField();
+        accountNumberField.setBounds(150, 50, 150, 25);
+        frame.add(accountNumberField);
+
+        JLabel passLabel = new JLabel("Special Password:");
+        passLabel.setBounds(30, 90, 120, 25);
+        passLabel.setForeground(Color.WHITE);
+        frame.add(passLabel);
+
+        specialPasswordField = new JPasswordField();
+        specialPasswordField.setBounds(150, 90, 150, 25);
+        frame.add(specialPasswordField);
+
+        JButton deleteButton = new JButton("Delete");
+        deleteButton.setBounds(80, 140, 80, 30);
+        deleteButton.setBackground(Color.WHITE);
+        deleteButton.setForeground(Color.BLACK);
+        frame.add(deleteButton);
+
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.setBounds(180, 140, 80, 30);
+        cancelButton.setBackground(Color.WHITE);
+        cancelButton.setForeground(Color.BLACK);
+        frame.add(cancelButton);
+
+        deleteButton.addActionListener(e -> deleteAccount());
+        cancelButton.addActionListener(e -> {
+            frame.dispose();
+            new Adminpanel(false);
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private void deleteAccount() {
+        String accNum = accountNumberField.getText().trim();
+        String specialPass = new String(specialPasswordField.getPassword());
+
+        if (accNum.isEmpty() || specialPass.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Please fill all fields!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!specialPass.equals("abcd")) {
+            JOptionPane.showMessageDialog(frame, "Incorrect special password!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+       
+        UserData userToDelete = null;
+        for (UserData user : DataStore.userList) {
+            if (user.getAccountNumber().equals(accNum)) {
+                userToDelete = user;
+                break;
+            }
+        }
+
+        if (userToDelete == null) {
+            JOptionPane.showMessageDialog(frame, "Account not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(frame,
+                "Are you sure you want to delete account " + accNum + "?",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            DataStore.userList.remove(userToDelete);
+            DataStore.saveUsers();
+            JOptionPane.showMessageDialog(frame, "Account deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            frame.dispose();
+            new Adminpanel(false);
+        }
+    }
+}
+package com.mycompany.mainpanel;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class Deposit extends JDialog {
+    private JTextField textField;
+    private JButton depositButton, cancelButton;
+    private List<UserData> userDataList;
+    private String cardNum;
+    private Validate v;
+    private String accNum;
+
+    public Deposit(Frame owner, String cardNum, List<UserData> userDataList) {
+        super(owner, "Deposit", true);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        this.cardNum = cardNum;
+        this.userDataList = userDataList;
+        v = new Validate();
+
+        Color sunsetPurple = new Color(100, 65, 110);
+        getContentPane().setBackground(sunsetPurple);
+
+        setLayout(new GridLayout(3, 2, 10, 10));
+
+        textField = new JTextField();
+        depositButton = new JButton("Deposit");
+        cancelButton = new JButton("Cancel");
+
+       
+        depositButton.setBackground(Color.WHITE);
+        depositButton.setForeground(Color.BLACK);
+        cancelButton.setBackground(Color.WHITE);
+        cancelButton.setForeground(Color.BLACK);
+
+        add(new JLabel("Enter Amount to Deposit:") {{
+            setForeground(Color.WHITE);
+        }});
+        add(textField);
+        add(depositButton);
+        add(cancelButton);
+
+        depositButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                accNum = UserData.getData(cardNum, 15, userDataList);
+                if (v.isAmount(textField.getText())) {
+                    double oldBalance = Double.parseDouble(UserData.getData(cardNum, 5, userDataList));
+                    double depositAmount = Double.parseDouble(textField.getText());
+                    double newBalance = oldBalance + depositAmount;
+
+                    UserData.setData(cardNum, 5, Double.toString(newBalance), userDataList);
+                    DataStore.saveUsers();
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    String timestamp = dtf.format(LocalDateTime.now());
+                    TransactionStorage.addTransaction(timestamp, accNum, "Deposit", depositAmount);
+
+                    JOptionPane.showMessageDialog(null, depositAmount + " Taka deposited successfully into your account.");
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid amount.");
+                }
+            }
+        });
+
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
+
+        pack();
+        setLocationRelativeTo(null);
+    }
+}
+
+package com.mycompany.mainpanel;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+public class FileHandler {
+public static void recordTransaction(String accNum, double amount, String type) {
+try (BufferedWriter writer = new BufferedWriter(new FileWriter("transactions.txt", true)))
+{
+String time =
+LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
+writer.write(type + " | Account: " + accNum + " | Amount: " + amount +" Taka | Time: "
++ time);
+writer.newLine();
+} catch (IOException e) {
+e.printStackTrace();
+}
+}
+}
+
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Mainpanel {
+    public static void main(String[] args) {
+        Color chineseViolet = new Color(133, 96, 136); 
+        Color oldButtonBg = UIManager.getColor("Button.background");
+        Color oldButtonFg = UIManager.getColor("Button.foreground");
+
+        try {
+           
+            UIManager.put("Button.background", Color.WHITE);
+            UIManager.put("Button.foreground", Color.BLACK);
+
+            
+            JPanel panel = new JPanel();
+            panel.setBackground(chineseViolet);
+            JLabel messageLabel = new JLabel("Hi!! Welcome to our ATM simulation system. Please click OK to continue.");
+            messageLabel.setForeground(Color.WHITE); 
+            panel.add(messageLabel);
+
+            JOptionPane.showMessageDialog(
+                    null,
+                    panel,
+                    "Welcome",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        } finally {
+           
+            UIManager.put("Button.background", oldButtonBg);
+            UIManager.put("Button.foreground", oldButtonFg);
+        }
+
+        openMainPanel();
+    }
+
+    public static void openMainPanel() {
+        JFrame frame = new JFrame("Main Panel");
+        frame.setSize(300, 200);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(null);
+
+        frame.getContentPane().setBackground(new Color(216, 191, 216)); 
+
+        JButton adminButton = new JButton("Admin Panel");
+        adminButton.setBounds(80, 40, 140, 30);
+        adminButton.setBackground(Color.WHITE);
+        frame.add(adminButton);
+
+        JButton customerButton = new JButton("Customer Panel");
+        customerButton.setBounds(80, 90, 140, 30);
+        customerButton.setBackground(Color.WHITE);
+        frame.add(customerButton);
+
+        adminButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                new Adminpanel();
+            }
+        });
+
+        customerButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                new CustomerLogin();
+            }
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MiniStatement extends JDialog {
+    private String accountNumber;
+
+    public MiniStatement(Frame owner, String accountNumber) {
+        super(owner, "Mini Statement", true);
+        this.accountNumber = accountNumber;
+
+        setSize(500, 300);
+        setLayout(new BorderLayout());
+
+        Color sunsetPurple = new Color(100, 50, 90);
+        getContentPane().setBackground(sunsetPurple);
+
+        JLabel headerLabel = new JLabel("Mini Statement for A/C: ****" +
+                accountNumber.substring(accountNumber.length() - 4));
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        headerLabel.setForeground(Color.WHITE);
+        headerLabel.setBackground(sunsetPurple);
+        headerLabel.setOpaque(true);
+        add(headerLabel, BorderLayout.NORTH);
+
+        JTextArea statementArea = new JTextArea();
+        statementArea.setEditable(false);
+        statementArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        statementArea.setBackground(sunsetPurple);
+        statementArea.setForeground(Color.WHITE);
+        statementArea.setCaretColor(Color.WHITE);
+
+        List<TransactionStorage.Transaction> transactions = getLastTransactions(accountNumber, 5);
+
+        if (transactions.isEmpty()) {
+            statementArea.setText("No transactions found.");
+        } else {
+            statementArea.append(String.format("%-20s %-15s %-10s %-10s\n",
+                    "Date/Time", "Type", "Amount", "Account"));
+            statementArea.append("-------------------------------------------------------------\n");
+            for (TransactionStorage.Transaction tx : transactions) {
+                statementArea.append(formatTransaction(tx) + "\n");
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(statementArea);
+        scrollPane.getViewport().setBackground(sunsetPurple);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        add(scrollPane, BorderLayout.CENTER);
+
+        setLocationRelativeTo(owner);
+        setVisible(true);
+    }
+
+    private List<TransactionStorage.Transaction> getLastTransactions(String accNum, int limit) {
+        return TransactionStorage.getTransactions()
+                .stream()
+                .filter(tx -> tx.accountNumber.equals(accNum))
+                .sorted((a, b) -> b.dateTime.compareTo(a.dateTime))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    private static final DateTimeFormatter FLEX_INPUT =
+            new DateTimeFormatterBuilder()
+                    .appendPattern("yyyy-MM-dd")
+                    .optionalStart().appendLiteral('T').optionalEnd()
+                    .optionalStart().appendLiteral(' ').optionalEnd()
+                    .appendPattern("HH:mm:ss")
+                    .optionalStart()
+                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                    .optionalEnd()
+                    .toFormatter();
+
+    private static final DateTimeFormatter OUTPUT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private String formatTransaction(TransactionStorage.Transaction tx) {
+        try {
+            LocalDateTime parsedDateTime = LocalDateTime.parse(tx.dateTime, FLEX_INPUT);
+            String formattedDateTime = parsedDateTime.format(OUTPUT);
+            return String.format("%-20s %-15s %-10.2f %-10s",
+                    formattedDateTime, tx.type, tx.amount,
+                    "****" + tx.accountNumber.substring(tx.accountNumber.length() - 4));
+        } catch (Exception e) {
+            String fallback = tx.dateTime.replace('T', ' ');
+            int dot = fallback.indexOf('.');
+            if (dot > 0) fallback = fallback.substring(0, dot);
+            return String.format("%-20s %-15s %-10.2f %-10s",
+                    fallback, tx.type, tx.amount,
+                    "****" + tx.accountNumber.substring(tx.accountNumber.length() - 4));
+        }
+    }
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
+
+public class SearchAccount extends JDialog {
+    private JTextField searchField;
+    private JButton searchButton;
+    private JTable resultTable;
+    private DefaultTableModel tableModel;
+
+    public SearchAccount(Frame owner) {
+        super(owner, "Search Account", true);
+        setLayout(new BorderLayout());
+        setSize(500, 300);
+        setLocationRelativeTo(owner);
+
+        Color kalamata = new Color(71, 42, 82);
+        getContentPane().setBackground(kalamata);
+
+        JPanel topPanel = new JPanel();
+        topPanel.setBackground(kalamata);
+
+        JLabel promptLabel = new JLabel("Enter Account Number:");
+        promptLabel.setForeground(Color.WHITE);
+        topPanel.add(promptLabel);
+
+        searchField = new JTextField(20);
+        topPanel.add(searchField);
+
+        searchButton = new JButton("Search");
+        searchButton.setBackground(Color.WHITE);
+        searchButton.setForeground(Color.BLACK);
+        topPanel.add(searchButton);
+
+        add(topPanel, BorderLayout.NORTH);
+
+       
+        String[] columns = {"Name", "NID", "DOB", "Account Number", "Balance"};
+        tableModel = new DefaultTableModel(columns, 0);
+        resultTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(resultTable);
+        scrollPane.getViewport().setBackground(kalamata);
+        add(scrollPane, BorderLayout.CENTER);
+
+        searchButton.addActionListener(e -> performSearch());
+
+       
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    }
+
+    private void performSearch() {
+        String accNum = searchField.getText().trim();
+        tableModel.setRowCount(0); 
+
+        if (accNum.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter an account number.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        List<UserData> users = DataStore.getUsers();
+        boolean found = false;
+
+        for (UserData user : users) {
+            if (user.getAccountNumber().equals(accNum)) {
+                Object[] row = {
+                    user.getName(),
+                    user.getNid(),
+                    user.getDob(),
+                    user.getAccountNumber(),
+                    user.getBalance()
+                };
+                tableModel.addRow(row);
+                found = true;
+            }
+        }
+
+        if (!found) {
+            JOptionPane.showMessageDialog(this, "No account found with that number.", "Not Found", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+public class TMoney extends JDialog {
+    private JTextField accNo, moneyT;
+    private JButton transButton, cancelButton;
+    private List<UserData> userDataList;
+    private String senderAccount;
+    private Validate v;
+
+    public TMoney(Frame owner, String senderAccount, List<UserData> userDataList) {
+        super(owner, "Transfer Money", true);
+        this.senderAccount = senderAccount;
+        this.userDataList = userDataList;
+        v = new Validate();
+
+        setLayout(new GridLayout(4, 2, 10, 10));
+        accNo = new JTextField();
+        moneyT = new JTextField();
+        transButton = new JButton("Transfer Money");
+        cancelButton = new JButton("Cancel");
+
+        add(new JLabel("Enter Receiver's Account Number:"));
+        add(accNo);
+        add(new JLabel("Enter Amount to Transfer:"));
+        add(moneyT);
+        add(transButton);
+        add(cancelButton);
+
+        transButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String receiverAcc = accNo.getText();
+                String amountStr = moneyT.getText();
+
+                if (!v.isAccountNumber(receiverAcc)) {
+                    JOptionPane.showMessageDialog(null, "Invalid account number format.");
+                    return;
+                }
+
+                if (!UserData.existsAccNo(receiverAcc, userDataList)) {
+                    JOptionPane.showMessageDialog(null, "Account number not found.");
+                    return;
+                }
+
+                if (!v.isAmount(amountStr)) {
+                    JOptionPane.showMessageDialog(null, "Invalid amount entered.");
+                    return;
+                }
+
+                double senderBalance = UserData.getBalance(senderAccount, userDataList);
+                double amount = Double.parseDouble(amountStr);
+                double receiverBalance = UserData.getBalance(receiverAcc, userDataList);
+
+                if (senderBalance - amount < 1000) {
+                    JOptionPane.showMessageDialog(null, "You must maintain at least 1000 Taka in your account.");
+                    return;
+                }
+
+                UserData.setBalance(senderAccount, senderBalance - amount, userDataList);
+                UserData.setBalance(receiverAcc, receiverBalance + amount, userDataList);
+
+               
+                DataStore.saveUsers();
+
+             
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                String dateTime = LocalDateTime.now().format(formatter);
+
+                TransactionStorage.addTransaction(dateTime, senderAccount, "Transfer Out", amount);
+                TransactionStorage.addTransaction(dateTime, receiverAcc, "Transfer In", amount);
+
+                
+                FileHandler.recordTransaction(senderAccount, amount, "Transferred To: " + receiverAcc);
+                FileHandler.recordTransaction(receiverAcc, amount, "Received From: " + senderAccount);
+
+                JOptionPane.showMessageDialog(null, "Money transferred successfully.");
+                dispose();
+            }
+        });
+
+        cancelButton.addActionListener(e -> dispose());
+
+        pack();
+        setLocationRelativeTo(null);
+    }
+}
+
+package com.mycompany.mainpanel;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TransactionStorage {
+    private static final String FILE_NAME = "transactions.dat";
+
+    public static class Transaction implements Serializable {
+        private static final long serialVersionUID = 1L; // For serialization
+        String dateTime;
+        String accountNumber;
+        String type;
+        double amount;
+
+        public Transaction(String dateTime, String accountNumber, String type, double amount) {
+            this.dateTime = dateTime; // Stored exactly as passed in
+            this.accountNumber = accountNumber;
+            this.type = type;
+            this.amount = amount;
+        }
+    }
+
+    private static List<Transaction> transactions = loadTransactions();
+
+    public static void addTransaction(String dateTime, String accountNumber, String type, double amount) {
+        transactions.add(new Transaction(dateTime, accountNumber, type, amount));
+        saveTransactions();
+    }
+
+    public static List<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public static void saveTransactions() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            out.writeObject(transactions);
+        } catch (IOException e) {
+            System.err.println("Error saving transactions: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<Transaction> loadTransactions() {
+        File file = new File(FILE_NAME);
+        if (!file.exists()) {
+            return new ArrayList<>();
+        }
+
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            return (List<Transaction>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading transactions: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.List;
+
+public class UpdateCustomerForm {
+    private JFrame frame;
+    private JTextField accField, nameField, dobField, nidField;
+    private List<UserData> userList;
+
+    public UpdateCustomerForm() {
+        userList = DataStore.getUsers();
+
+        frame = new JFrame("Update Customer Details");
+        frame.setSize(400, 400);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setLayout(null);
+
+        Color kalamata = new Color(71, 42, 82);
+        frame.getContentPane().setBackground(kalamata);
+
+        JLabel accLabel = new JLabel("Enter Account Number:");
+        accLabel.setBounds(30, 30, 150, 30);
+        accLabel.setForeground(Color.WHITE);
+        frame.add(accLabel);
+
+        accField = new JTextField();
+        accField.setBounds(180, 30, 150, 30);
+        frame.add(accField);
+
+        JButton searchButton = new JButton("Search");
+        searchButton.setBounds(130, 70, 120, 30);
+        searchButton.setBackground(Color.WHITE);
+        searchButton.setForeground(Color.BLACK);
+        frame.add(searchButton);
+
+        nameField = new JTextField();
+        dobField = new JTextField();
+        nidField = new JTextField();
+
+        nameField.setBounds(150, 120, 180, 30);
+        dobField.setBounds(150, 170, 180, 30);
+        nidField.setBounds(150, 220, 180, 30);
+
+        JLabel nameLabel = new JLabel("Name:");
+        nameLabel.setBounds(50, 120, 100, 30);
+        nameLabel.setForeground(Color.WHITE);
+        frame.add(nameLabel);
+        frame.add(nameField);
+
+        JLabel dobLabel = new JLabel("DOB:");
+        dobLabel.setBounds(50, 170, 120, 30);
+        dobLabel.setForeground(Color.WHITE);
+        frame.add(dobLabel);
+        frame.add(dobField);
+
+        JLabel nidLabel = new JLabel("NID Number:");
+        nidLabel.setBounds(50, 220, 100, 30);
+        nidLabel.setForeground(Color.WHITE);
+        frame.add(nidLabel);
+        frame.add(nidField);
+
+        JButton updateBtn = new JButton("Update");
+        updateBtn.setBounds(100, 280, 90, 30);
+        updateBtn.setBackground(Color.WHITE);
+        updateBtn.setForeground(Color.BLACK);
+        frame.add(updateBtn);
+
+        JButton backBtn = new JButton("Back");
+        backBtn.setBounds(200, 280, 90, 30);
+        backBtn.setBackground(Color.WHITE);
+        backBtn.setForeground(Color.BLACK);
+        frame.add(backBtn);
+
+        searchButton.addActionListener(e -> searchAndFillFields());
+
+        updateBtn.addActionListener(e -> updateCustomer());
+
+        backBtn.addActionListener(e -> {
+            frame.dispose();
+            Adminpanel.openAdminPanel();
+        });
+
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private void searchAndFillFields() {
+        String accNo = accField.getText().trim();
+        for (UserData user : userList) {
+            if (user.getAccountNumber().equals(accNo)) {
+                nameField.setText(user.getName());
+                dobField.setText(user.getDob());
+                nidField.setText(user.getNid());
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(frame, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void updateCustomer() {
+        String accNo = accField.getText().trim();
+        String name = nameField.getText().trim();
+        String dobText = dobField.getText().trim();
+        String nid = nidField.getText().trim();
+
+        if (name.isEmpty() || nid.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "All fields are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            LocalDate dob = LocalDate.parse(dobText);
+            int age = Period.between(dob, LocalDate.now()).getYears();
+            if (age < 18) {
+                JOptionPane.showMessageDialog(frame, "Customer must be 18 or older.", "Invalid DOB", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            for (UserData user : userList) {
+                if (user.getAccountNumber().equals(accNo)) {
+                    user.setName(name);
+                    user.setDob(dobText);
+                    user.setNid(nid);
+                    JOptionPane.showMessageDialog(frame, "Customer details updated successfully.");
+                    return;
+                }
+            }
+
+            JOptionPane.showMessageDialog(frame, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Invalid date format. Use yyyy-mm-dd.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
+
+package com.mycompany.mainpanel;
+import java.io.Serializable;
+import java.util.List;
+public class UserData implements Serializable {
+    private static final long serialVersionUID = 1L;
+private String name, nid, dob, accountNumber, pin;
+private double balance = 0.0;
+public UserData(String name, String nid, String dob, String accountNumber, String pin) {
+this.name = name;
+this.nid = nid;
+this.dob = dob;
+this.accountNumber = accountNumber;
+this.pin = pin;
+}
+public String getAccountNumber() {
+return accountNumber;
+}
+public String getPin() {
+return pin;
+}
+public String getName() {
+return name;
+}
+public String getDob() {
+return dob;
+}
+public String getNid() {
+return nid;
+}
+public double getBalance() {
+return balance;
+}
+public void setBalance(double balance) {
+this.balance = balance;
+}
+public static String getData(String accNum, int index, List<UserData> users) {
+for (UserData user : users) {
+if (user.getAccountNumber().equals(accNum)) {
+switch (index) {
+case 5:
+return Double.toString(user.getBalance());
+case 15:
+return user.getAccountNumber();
+default:
+return "";
+}
+}
+}
+return null;
+}
+public static void setData(String accNum, int index, String newData, List<UserData>
+users) {
+for (UserData user : users) {
+if (user.getAccountNumber().equals(accNum)) {
+switch (index) {
+case 5:
+user.setBalance(Double.parseDouble(newData));
+break;
+}
+}
+}
+}
+public static boolean existsAccNo(String accNum, List<UserData> users) {
+for (UserData user : users) {
+if (user.getAccountNumber().equals(accNum)) {
+return true;
+}
+}
+return false;
+}
+public static double getBalance(String accNum, List<UserData> users) {
+for (UserData user : users) {
+if (user.getAccountNumber().equals(accNum)) {
+return user.getBalance();
+}
+}
+return 0.0;
+}
+public static void setBalance(String accNum, double newBalance, List<UserData> users) {
+for (UserData user : users) {
+if (user.getAccountNumber().equals(accNum)) {
+user.setBalance(newBalance);
+break;
+}
+}
+}
+public void setName(String name) {
+    this.name = name;
+}
+
+public void setDob(String dob) {
+    this.dob = dob;
+}
+
+public void setNid(String nid) {
+    this.nid = nid;
+}
+}
+
+package com.mycompany.mainpanel;
+class Validate {
+public boolean isAccountNumber(String accNo) {
+return accNo != null && accNo.matches("\\d{5}");
+}
+public boolean isAmount(String amount) {
+try {
+double val = Double.parseDouble(amount);
+return val > 0;
+} catch (NumberFormatException e) {
+return false;
+}
+}
+}
+package com.mycompany.mainpanel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+public class Withdrawal extends JDialog {
+    private JTextField textField;
+    private JButton withdrawButton, cancelButton;
+    private List<UserData> userDataList;
+    private String cardNum;
+    private Validate v;
+    private String accNum;
+
+    public Withdrawal(Frame owner, String cardNum, List<UserData> userDataList) {
+        super(owner, "Withdrawal", true);
+        this.cardNum = cardNum;
+        this.userDataList = userDataList;
+        v = new Validate();
+        accNum = UserData.getData(cardNum, 15, userDataList); // account number
+
+        Color sunsetPurple = new Color(100, 65, 110);
+        getContentPane().setBackground(sunsetPurple);
+
+        setLayout(new GridLayout(3, 2, 10, 10));
+
+        textField = new JTextField();
+        withdrawButton = new JButton("Withdraw");
+        cancelButton = new JButton("Cancel");
+
+        withdrawButton.setBackground(Color.WHITE);
+        withdrawButton.setForeground(Color.BLACK);
+        cancelButton.setBackground(Color.WHITE);
+        cancelButton.setForeground(Color.BLACK);
+
+        JLabel label = new JLabel("Enter Amount to Withdraw:");
+        label.setForeground(Color.WHITE);
+
+        add(label);
+        add(textField);
+        add(withdrawButton);
+        add(cancelButton);
+
+        withdrawButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (v.isAmount(textField.getText())) {
+                    double oldBalance = Double.parseDouble(UserData.getData(cardNum, 5, userDataList));
+                    double withdrawalAmount = Double.parseDouble(textField.getText());
+
+                    if (withdrawalAmount <= 10000) {
+                        if (oldBalance - withdrawalAmount >= 1000) {
+                            double newBalance = oldBalance - withdrawalAmount;
+                            UserData.setData(cardNum, 5, Double.toString(newBalance), userDataList);
+                            DataStore.saveUsers();
+                            FileHandler.recordTransaction(accNum, withdrawalAmount, "Withdrawal");
+
+                          
+                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            String timestamp = dtf.format(LocalDateTime.now());
+
+                            TransactionStorage.addTransaction(
+                                timestamp,
+                                accNum,
+                                "Withdrawal",
+                                withdrawalAmount
+                            );
+
+                            JOptionPane.showMessageDialog(null, "Please collect your money.");
+                            dispose();
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Your balance cannot go below 1000 Taka.");
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Maximum withdrawal limit is 10,000 Taka.");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid amount.");
+                }
+            }
+        });
+
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
+
+        pack();
+        setLocationRelativeTo(null);
+    }
+}
+
 
